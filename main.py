@@ -12,11 +12,24 @@ class ProductCreate(BaseModel):
     price: int = Field(ge=0)
 
 
+class ProductUpdate(BaseModel):
+    name: str | None = Field(default=None, min_length=2, max_length=100)
+    category: str | None = Field(default=None, min_length=3, max_length=30)
+    price: int | None = Field(default=None, ge=0)
+
+
 class UserCreate(BaseModel):
     name: str = Field(min_length=2, max_length=50)
     age: int = Field(ge=18, le=100)
     email: str = Field(min_length=5, max_length=100)
     is_active: bool = Field(default=True)
+
+
+class UserUpdate(BaseModel):
+    name: str | None = Field(default=None, min_length=2, max_length=50)
+    age: int | None = Field(default=None, ge=18, le=100)
+    email: str | None = Field(default=None, min_length=5, max_length=100)
+    is_active: bool | None = Field(default=True)
 
 
 products = [
@@ -146,9 +159,26 @@ async def put_user(user_id: int, user: UserCreate):
         if u["id"] == user_id:
             updated_user = user.model_dump()
             updated_user["id"] = user_id
-
             users[index] = updated_user
-
             return updated_user
-
     raise HTTPException(status_code=404, detail="user not found")
+
+
+@app.patch("/products/{product_id}")
+async def patch_product(product_id: int, product: ProductUpdate):
+    for p in products:
+        if p["id"] == product_id:
+            updated_data = product.model_dump(exclude_unset=True)
+            p.update(updated_data)
+            return p
+    raise HTTPException(status_code=404, detail="Product not found")
+
+
+@app.patch("/users/{user_id}")
+async def patch_user(user_id: int, user: UserUpdate):
+    for u in users:
+        if u["id"] == user_id:
+            data_user = user.model_dump(exclude_unset=True)
+            u.update(data_user)
+            return u
+    raise HTTPException(status_code=404, detail="User not found")
