@@ -1,5 +1,5 @@
 from fastapi import FastAPI, Query
-
+from typing import Literal
 app = FastAPI()
 
 products = [
@@ -32,7 +32,7 @@ async def get_users(age: int | None = None):
 
 @app.get("/products")
 async def get_products(
-    sort_order: str = Query(default='asc'),
+    sort_order: Literal['asc', 'desc'] = 'asc',
     limit: int = Query(default=10, ge=1, le=100),
     offset: int = Query(default=0, ge=0),
     category: str | None = Query(default=None, min_length=3, max_length=30),
