@@ -32,6 +32,22 @@ class UserUpdate(BaseModel):
     is_active: bool | None = Field(default=True)
 
 
+class UserResponse(BaseModel):
+    id: int
+    name: str
+    email: str
+    is_active: bool
+
+
+class ProductResponse(BaseModel):
+    id: int
+    name: str
+    category: str
+    price: int
+
+
+
+
 products = [
     {"id": 1, "name": "iPhone", "category": "phone", "price": 1000},
     {"id": 2, "name": "MacBook", "category": "laptop", "price": 1500},
@@ -60,7 +76,7 @@ async def get_users(age: int | None = None):
     return users
 
 
-@app.get("/products")
+@app.get("/products", response_model=ProductResponse)
 async def get_products(
     sort_by: Literal["id", "name", "price"] = "id",
     sort_order: Literal["asc", "desc"] = "asc",
@@ -101,7 +117,7 @@ async def get_products(
     return result[offset : offset + limit]
 
 
-@app.get("/products/{product_id}")
+@app.get("/products/{product_id}", response_model=ProductResponse)
 async def get_produtc(product_id: int):
     for product in products:
         if product["id"] == product_id:
@@ -109,7 +125,7 @@ async def get_produtc(product_id: int):
     raise HTTPException(status_code=404, detail="Product not found")
 
 
-@app.post("/products", status_code=201)
+@app.post("/products", status_code=201, response_model=ProductResponse)
 async def post_product(product: ProductCreate):
     for p in products:
         if p["name"].lower() == product.name.lower():
@@ -124,7 +140,7 @@ async def post_product(product: ProductCreate):
     return new_product
 
 
-@app.post("/users", status_code=201)
+@app.post("/users", status_code=201, )
 async def post_user(user: UserCreate):
 
     if any(u.get("email") == user.email for u in users):
@@ -139,7 +155,7 @@ async def post_user(user: UserCreate):
     return new_user
 
 
-@app.put("/products/{product_id}")
+@app.put("/products/{product_id}", response_model=ProductResponse)
 async def put_product(product_id: int, product: ProductCreate):
     for index, p in enumerate(products):
         if p["id"] == product_id:
@@ -164,7 +180,7 @@ async def put_user(user_id: int, user: UserCreate):
     raise HTTPException(status_code=404, detail="user not found")
 
 
-@app.patch("/products/{product_id}")
+@app.patch("/products/{product_id}", response_model=ProductResponse)
 async def patch_product(product_id: int, product: ProductUpdate):
     for p in products:
         if p["id"] == product_id:
@@ -181,4 +197,22 @@ async def patch_user(user_id: int, user: UserUpdate):
             data_user = user.model_dump(exclude_unset=True)
             u.update(data_user)
             return u
+    raise HTTPException(status_code=404, detail="User not found")
+
+
+@app.delete("/products/{product_id}", status_code=204, response_model=ProductResponse)
+async def delete_product(product_id: int):
+    for index, product in enumerate(products):
+        if product["id"] == product_id:
+            product.pop(index)
+            return
+    raise HTTPException(status_code=404, detail="Product not found")
+
+
+@app.delete("/users/{user_id}", status_code=204)
+async def delete_user(user_id: int):
+    for index, user in enumerate(users):
+        if user["id"] == user_id:
+            users.pop(index)
+            return
     raise HTTPException(status_code=404, detail="User not found")
