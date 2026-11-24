@@ -32,6 +32,7 @@ async def get_users(age: int | None = None):
 
 @app.get("/products")
 async def get_products(
+    sort_order: str = Query(default='asc'),
     limit: int = Query(default=10, ge=1, le=100),
     offset: int = Query(default=0, ge=0),
     category: str | None = Query(default=None, min_length=3, max_length=30),
@@ -57,4 +58,12 @@ async def get_products(
             product for product in result if name.lower() in product["name"].lower()
         ]
 
-    return result[offset : offset + limit]
+    result[offset : offset + limit]
+
+    result = sorted(
+        result,
+        key=lambda product : product['price'],
+        reverse= sort_order == 'desc'
+    )
+
+    return result
